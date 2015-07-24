@@ -17,7 +17,9 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -25,6 +27,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -35,6 +38,7 @@ public class MovieFragment extends Fragment {
 
     private Context mContext;
     private GridView mGridView;
+    private MovieAdapter mMovieAdapter;
 
     public MovieFragment() {
 
@@ -55,67 +59,52 @@ public class MovieFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_movie, container, false);
         mGridView = (GridView) rootView.findViewById(R.id.gridView);
 
-        mGridView.setAdapter(new MovieAdapter(mContext));
+        mMovieAdapter = new MovieAdapter(mContext);
+        mGridView.setAdapter(mMovieAdapter);
 
         return rootView;
     }
 
-    public class MovieAdapter extends BaseAdapter {
-        private Context mContext;
+    public class FetchMovieTask extends AsyncTask<String, Void, ArrayList<Movie>> {
 
-        public MovieAdapter(Context c) {
-            mContext = c;
-        }
+        private ArrayList<Movie> getMovieDataFromJson(String movieJsonStr) throws JSONException {
+            ArrayList<Movie> movieArrayList = new ArrayList<>();
 
-        public int getCount() {
-            return mExampleImages.length;
-        }
-        public Object getItem(int position) {
-            return null;
-        }
+            final String OWN_RESULTS = "results";
+            final String OWN_ID = "id";
+            final String OWN_TITLE = "title";
+            final String OWN_OVERVIEW = "overview";
+            final String OWN_POSTER_PATH = "poster_path";
+            final String OWN_VOTE_AVERAGE = "vote_average";
+            final String OWN_VOTE_COUNT = "vote_count";
+            final String OWN_RELEASE_DATE = "release_date";
 
-        public long getItemId(int position) {
-            return 0;
-        }
+            JSONObject movieJson = new JSONObject(movieJsonStr);
+            JSONArray movies = movieJson.getJSONArray(OWN_RESULTS);
 
-        public View getView(int position, View convertView, ViewGroup parent) {
-            ImageView imageView;
-            if (convertView == null) {
-                imageView = new ImageView(mContext);
-                imageView.setLayoutParams(new GridView.LayoutParams(200, 200));
-                imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                imageView.setPadding(8, 8, 8, 8);
-            } else {
-                imageView = (ImageView) convertView;
+            JSONObject movie;
+            Movie newMovie;
+
+            for (int i = 0; i < movies.length(); i++) {
+                movie = movies.getJSONObject(i);
+                newMovie = new Movie(
+                        movie.getLong(OWN_ID),
+                        movie.getString(OWN_TITLE),
+                        movie.getString(OWN_OVERVIEW),
+                        movie.getString(OWN_POSTER_PATH),
+                        movie.getDouble(OWN_VOTE_AVERAGE),
+                        movie.getLong(OWN_VOTE_COUNT),
+                        movie.getString(OWN_RELEASE_DATE)
+                );
+                movieArrayList.add(newMovie);
             }
 
-            imageView.setImageResource(mExampleImages[position]);
-            return imageView;
+            Log.d(LOG_TAG, "movieArrayList" + movieArrayList.size());
+            return movieArrayList;
         }
-        private Integer[] mExampleImages = {
-                R.drawable.web_launcher, R.drawable.web_launcher,
-                R.drawable.web_launcher, R.drawable.web_launcher,
-                R.drawable.web_launcher, R.drawable.web_launcher,
-                R.drawable.web_launcher, R.drawable.web_launcher,
-                R.drawable.web_launcher, R.drawable.web_launcher,
-                R.drawable.web_launcher, R.drawable.web_launcher,
-                R.drawable.web_launcher, R.drawable.web_launcher,
-                R.drawable.web_launcher, R.drawable.web_launcher,
-                R.drawable.web_launcher, R.drawable.web_launcher,
-                R.drawable.web_launcher, R.drawable.web_launcher,
-                R.drawable.web_launcher, R.drawable.web_launcher,
-                R.drawable.web_launcher, R.drawable.web_launcher,
-                R.drawable.web_launcher, R.drawable.web_launcher,
-                R.drawable.web_launcher, R.drawable.web_launcher,
-                R.drawable.web_launcher, R.drawable.web_launcher,
-                R.drawable.web_launcher, R.drawable.web_launcher,
-        };
-    }
-
-    public class FetchMovieTask extends AsyncTask<String, Void, List> {
 
         @Override
-        protected List doInBackground(String... params) {
+        protected ArrayList<Movie> doInBackground(String... params) {
 
             HttpURLConnection urlConnection = null;
             BufferedReader reader = null;
@@ -171,11 +160,19 @@ public class MovieFragment extends Fragment {
                 }
             }
 
-
+            try {
+                return getMovieDataFromJson(movieJsonStr);
+            } catch (JSONException e) {
+                Log.e(LOG_TAG, e.getMessage(), e);
+                e.printStackTrace();
+            }
             return null;
         }
 
-        protected void onPostExecute(List result) {
+        protected void onPostExecute(ArrayList<Movie> result) {
+            Log.d(LOG_TAG, "onPostExecute result.size() = " + result.size());
+
+            mMovieAdapter.addAll(result);
 
         }
     }
