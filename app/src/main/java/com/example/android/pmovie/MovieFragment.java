@@ -122,7 +122,7 @@ public class MovieFragment extends Fragment {
 
             String movieJsonStr = null;
             try {
-                final String BASE_URL = "http://api.themoviedb.org/3/discover/movie?sort_by=popularity.desc&api_key=";
+                final String BASE_URL = "http://api.themoviedb.org/3/discover/movie?sort_by=popularity.desc&api_key=&append_to_response=releases,trailers";
                 Uri buildUri = Uri.parse(BASE_URL).buildUpon().build();
                 URL url = new URL(buildUri.toString());
 

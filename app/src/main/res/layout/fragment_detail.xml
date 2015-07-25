@@ -71,10 +71,16 @@
                                 android:layout_margin="12dp"
                                 android:textSize="20dp"/>
                             <TextView
-                                android:id="@+id/vote_average_textview"
+                                android:id="@+id/runtime_textview"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_below="@id/release_date_textview"
+                                android:layout_margin="12dp"/>
+                            <TextView
+                                android:id="@+id/vote_average_textview"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_below="@id/runtime_textview"
                                 android:layout_margin="12dp"/>
                             <TextView
                                 android:id="@+id/vote_count_textview"
@@ -118,6 +124,19 @@
                         android:layout_margin="12dp"
                         android:text="Trailers:"
                         android:textSize="20dp"/>
+                    <!--<com.google.android.youtube.player.YouTubePlayerView-->
+                        <!--android:id="@+id/player_view"-->
+                        <!--android:layout_width="wrap_content"-->
+                        <!--android:layout_height="wrap_content"-->
+                        <!--android:layout_below="@+id/trailers_textview"/>-->
+                    <fragment
+                        android:name="com.google.android.youtube.player.YouTubePlayerSupportFragment"
+                        android:id="@+id/youtube_fragment"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="12dp"
+                        android:layout_below="@+id/trailers_textview"/>
+
                 </RelativeLayout>
 
             </LinearLayout>
