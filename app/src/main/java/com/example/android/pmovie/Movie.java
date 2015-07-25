@@ -1,9 +1,13 @@
 package com.example.android.pmovie;
 
+
+import java.io.Serializable;
+
 /**
  * Created by zz on 7/23/2015.
  */
-public class Movie {
+public class Movie implements Serializable {
+    public static final String EXTRA_MOVIE = "com.example.android.pmovie";
 
     public final long id;
     public final String title;
@@ -24,6 +28,5 @@ public class Movie {
         this.vote_count = vote_count;
         this.release_date = release_date;
     }
-
 }
 

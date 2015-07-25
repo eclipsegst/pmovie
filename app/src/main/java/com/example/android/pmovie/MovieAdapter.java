@@ -63,9 +63,9 @@ public class MovieAdapter extends BaseAdapter{
         ImageView imageView;
         if (convertView == null) {
             imageView = new ImageView(mContext);
-            imageView.setLayoutParams(new GridView.LayoutParams(mWidth,mHeight));
+            imageView.setLayoutParams(new GridView.LayoutParams(mWidth, mHeight));
             imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
-            imageView.setPadding(8, 8, 8, 8);
+            imageView.setPadding(4, 4, 4, 4);
         } else {
             imageView = (ImageView) convertView;
         }
