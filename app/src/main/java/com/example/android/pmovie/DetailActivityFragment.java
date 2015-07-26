@@ -10,14 +10,18 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ImageView;
+import android.widget.ListAdapter;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
-import com.google.android.youtube.player.YouTubeInitializationResult;
 import com.google.android.youtube.player.YouTubePlayer;
 import com.google.android.youtube.player.YouTubePlayerSupportFragment;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -27,7 +31,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -49,7 +55,9 @@ public class DetailActivityFragment extends Fragment {
     private final static String OWN_TRAILERS = "trailers";
     private final static String OWN_YOUTUTBE = "youtube";
     private final static String OWN_TRAILERS_NAME = "name";
+    private final static String OWN_TRAILERS_SIZE= "size";
     private final static String OWN_TRAILERS_SOURCE = "source";
+    private final static String OWN_TRAILERS_TYPE = "type";
 
     private Boolean adult;
     private long buget;
@@ -76,6 +84,10 @@ public class DetailActivityFragment extends Fragment {
 
     private YouTubePlayerSupportFragment youTubePlayerFragment;
 
+    private List<VideoItem> videoItems;
+    private ArrayAdapter<VideoItem> videoItemArrayAdapter;
+    private ListView listView;
+
     public DetailActivityFragment() {
     }
 
@@ -84,6 +96,7 @@ public class DetailActivityFragment extends Fragment {
         super.onCreate(saveInstanceState);
         mContext = this.getActivity().getApplicationContext();
 
+        videoItems = new ArrayList<VideoItem>();
 
         Intent intent = getActivity().getIntent();
         mMovie = (Movie)intent.getSerializableExtra("MOVIE");
@@ -93,8 +106,6 @@ public class DetailActivityFragment extends Fragment {
 
         FetchMovieTask fetchMovieTask = new FetchMovieTask();
         fetchMovieTask.execute();
-
-
 
     }
 
@@ -129,10 +140,10 @@ public class DetailActivityFragment extends Fragment {
                 .load(baseImageUrl + mMovie.poster_path)
                 .into(imageView);
 
-        youTubePlayerFragment = YouTubePlayerSupportFragment.newInstance();
+//        youTubePlayerFragment = YouTubePlayerSupportFragment.newInstance();
 //        FragmentTransaction transaction = getChildFragmentManager().beginTransaction();
 //        transaction.add(R.id.youtube_fragment, youTubePlayerFragment).commit();
-        youTubePlayerFragment = (YouTubePlayerSupportFragment)getChildFragmentManager().findFragmentById(R.id.youtube_fragment);
+//        youTubePlayerFragment = (YouTubePlayerSupportFragment)getChildFragmentManager().findFragmentById(R.id.youtube_fragment);
 
 //        youTubePlayerFragment.initialize(YoutubeDeveloperKey, new YouTubePlayer.OnInitializedListener() {
 //
@@ -155,6 +166,47 @@ public class DetailActivityFragment extends Fragment {
 //            }
 //        });
 
+        listView = (ListView) rootView.findViewById(R.id.videos_listview);
+        setListViewHeightBasedOnChildren(listView);
+        videoItemArrayAdapter = new ArrayAdapter<VideoItem>(mContext, R.layout.video_item, videoItems){
+            @Override
+            public View getView(int position, View convertView, ViewGroup parent) {
+                if(convertView == null){
+                    convertView = getActivity().getLayoutInflater().inflate(R.layout.video_item, parent, false);
+                }
+                ImageView thumbnailImageView = (ImageView)convertView.findViewById(R.id.video_thumbnail);
+                TextView titleTextView = (TextView)convertView.findViewById(R.id.video_title);
+                TextView sizeTextView = (TextView)convertView.findViewById(R.id.video_size);
+                TextView typeTextView = (TextView)convertView.findViewById(R.id.video_type);
+
+                VideoItem videoItem = videoItems.get(position);
+
+                String thumbnailUrl = "http://img.youtube.com/vi/" + videoItem.getSource() + "/1.jpg";
+
+                Glide.with(thumbnailImageView.getContext())
+                        .load(thumbnailUrl)
+                        .into(thumbnailImageView);
+                titleTextView.setText(videoItem.getName());
+                sizeTextView.setText("Size: " + videoItem.getSize());
+                typeTextView.setText("Type: " + videoItem.getType());
+                return convertView;
+            }
+        };
+
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+            @Override
+            public void onItemClick(AdapterView<?> av, View v, int pos,
+                                    long id) {
+                Intent intent = new Intent(getActivity(), PlayerActivity.class);
+                intent.putExtra("TRAILER_SOURCE", videoItems.get(pos).getSource());
+                startActivity(intent);
+            }
+
+        });
+
+        listView.setAdapter(videoItemArrayAdapter);
+
         return rootView;
     }
 
@@ -164,7 +216,7 @@ public class DetailActivityFragment extends Fragment {
 
         private Map<String, String> getMovieDataFromJson(String movieJsonStr) throws JSONException {
             Map<String, String> map = new HashMap<>();
-
+            JSONObject youtubeObj;
             JSONObject movieJson = new JSONObject(movieJsonStr);
 
             adult = movieJson.getBoolean(OWN_ADULT);
@@ -174,7 +226,8 @@ public class DetailActivityFragment extends Fragment {
             runtime = movieJson.getInt(OWN_RUNTIME);
 
             JSONObject trailerObj = movieJson.getJSONObject(OWN_TRAILERS);
-            JSONObject youtubeObj = trailerObj.getJSONArray(OWN_YOUTUTBE).getJSONObject(0);
+            JSONArray youtubeArray = trailerObj.getJSONArray(OWN_YOUTUTBE);
+            youtubeObj = trailerObj.getJSONArray(OWN_YOUTUTBE).getJSONObject(0);
 
             trailerName = youtubeObj.getString(OWN_TRAILERS_NAME);
             trailerSource = youtubeObj.getString(OWN_TRAILERS_SOURCE);
@@ -186,6 +239,25 @@ public class DetailActivityFragment extends Fragment {
             map.put(OWN_RUNTIME, String.valueOf(runtime));
             map.put(OWN_TRAILERS_NAME, String.valueOf(trailerName));
             map.put(OWN_TRAILERS_SOURCE, String.valueOf(trailerSource));
+
+
+            for (int i = 0; i < youtubeArray.length(); i++) {
+                youtubeObj = youtubeArray.getJSONObject(i);
+
+                String name = youtubeObj.getString(OWN_TRAILERS_NAME);
+                String size = youtubeObj.getString(OWN_TRAILERS_SIZE);
+                String source = youtubeObj.getString(OWN_TRAILERS_SOURCE);
+                String type = youtubeObj.getString(OWN_TRAILERS_TYPE);
+
+                VideoItem item = new VideoItem();
+
+                item.setName(name);
+                item.setSize(size);
+                item.setSource(source);
+                item.setType(type);
+
+                videoItems.add(item);
+            }
 
             return map;
         }
@@ -267,25 +339,49 @@ public class DetailActivityFragment extends Fragment {
 
         protected void onPostExecute(final Map<String, String> result) {
             mRuntime.setText(result.get(OWN_RUNTIME) + " min");
+            videoItemArrayAdapter.notifyDataSetChanged();
+            setListViewHeightBasedOnChildren(listView);
 
-            youTubePlayerFragment.initialize(YoutubeDeveloperKey, new YouTubePlayer.OnInitializedListener() {
-
-                @Override
-                public void onInitializationSuccess(YouTubePlayer.Provider arg0, YouTubePlayer youTubePlayer, boolean b) {
-                    if (!b) {
-                        YPlayer = youTubePlayer;
-                        YPlayer.setFullscreen(false);
-                        YPlayer.setPlayerStyle(YouTubePlayer.PlayerStyle.DEFAULT);
-                        YPlayer.cueVideo(result.get(OWN_TRAILERS_SOURCE));
-                    }
-                }
-
-                @Override
-                public void onInitializationFailure(YouTubePlayer.Provider arg0, YouTubeInitializationResult arg1) {
-                    // TODO Auto-generated method stub
-
-                }
-            });
+//            youTubePlayerFragment.initialize(YoutubeDeveloperKey, new YouTubePlayer.OnInitializedListener() {
+//
+//                @Override
+//                public void onInitializationSuccess(YouTubePlayer.Provider arg0, YouTubePlayer youTubePlayer, boolean b) {
+//                    if (!b) {
+//                        YPlayer = youTubePlayer;
+//                        YPlayer.setFullscreen(false);
+//                        YPlayer.setPlayerStyle(YouTubePlayer.PlayerStyle.DEFAULT);
+//                        YPlayer.cueVideo(result.get(OWN_TRAILERS_SOURCE));
+//                    }
+//                }
+//
+//                @Override
+//                public void onInitializationFailure(YouTubePlayer.Provider arg0, YouTubeInitializationResult arg1) {
+//                    // TODO Auto-generated method stub
+//
+//                }
+//            });
         }
     }
+
+    public static void setListViewHeightBasedOnChildren(ListView listView) {
+        ListAdapter listAdapter = listView.getAdapter();
+        if (listAdapter == null) {
+            return;
+        }
+
+        int totalHeight = 0;
+        int len = listAdapter.getCount();
+        for (int i = 0; i < len; i++) {
+            View listItem = listAdapter.getView(i, null, listView);
+            listItem.measure(0, 0);
+            totalHeight += listItem.getMeasuredHeight(); // Sum of all the child view height
+        }
+
+        ViewGroup.LayoutParams params = listView.getLayoutParams();
+        params.height = totalHeight
+                + (listView.getDividerHeight() * (listAdapter.getCount() - 1));
+        // listView.getDividerHeight() is divider height among child view
+        listView.setLayoutParams(params);
+    }
+
 }

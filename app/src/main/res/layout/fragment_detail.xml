@@ -6,7 +6,7 @@
 
     <ScrollView
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="fill_parent"
         android:orientation="vertical">
 
         <LinearLayout
@@ -124,18 +124,23 @@
                         android:layout_margin="12dp"
                         android:text="Trailers:"
                         android:textSize="20dp"/>
-                    <!--<com.google.android.youtube.player.YouTubePlayerView-->
-                        <!--android:id="@+id/player_view"-->
-                        <!--android:layout_width="wrap_content"-->
-                        <!--android:layout_height="wrap_content"-->
-                        <!--android:layout_below="@+id/trailers_textview"/>-->
-                    <fragment
-                        android:name="com.google.android.youtube.player.YouTubePlayerSupportFragment"
-                        android:id="@+id/youtube_fragment"
+
+                    <ListView
+                        android:id="@+id/videos_listview"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_margin="12dp"
-                        android:layout_below="@+id/trailers_textview"/>
+                        android:dividerHeight="5dp"
+                        android:layout_below="@+id/trailers_textview"
+                        android:layout_margin="12dp"/>
+
+                    <!--<fragment-->
+                        <!--android:name="com.google.android.youtube.player.YouTubePlayerSupportFragment"-->
+                        <!--android:id="@+id/youtube_fragment"-->
+                        <!--android:layout_width="wrap_content"-->
+                        <!--android:layout_height="wrap_content"-->
+                        <!--android:layout_margin="12dp"-->
+                        <!--android:layout_below="@id/videos_listview"-->
+                        <!--/>-->
 
                 </RelativeLayout>
 
