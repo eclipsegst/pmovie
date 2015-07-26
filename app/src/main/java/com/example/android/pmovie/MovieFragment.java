@@ -31,6 +31,7 @@ import java.util.ArrayList;
 public class MovieFragment extends Fragment {
     private final String LOG_TAG = MovieFragment.class.getSimpleName();
 
+    private String API_KEY;
     private Context mContext;
     private GridView mGridView;
     private MovieAdapter mMovieAdapter;
@@ -43,6 +44,8 @@ public class MovieFragment extends Fragment {
     public void onCreate(Bundle saveInstanceState) {
         super.onCreate(saveInstanceState);
         mContext = this.getActivity().getApplicationContext();
+
+        API_KEY = ((Constants) this.getActivity().getApplication()).API_KEY;
 
         FetchMovieTask movieTask = new FetchMovieTask();
         movieTask.execute();
@@ -121,15 +124,23 @@ public class MovieFragment extends Fragment {
             BufferedReader reader = null;
 
             String movieJsonStr = null;
+            String sortBy = "popularity.desc";
             try {
-                final String BASE_URL = "http://api.themoviedb.org/3/discover/movie?sort_by=popularity.desc&api_key=&append_to_response=releases,trailers";
-                Uri buildUri = Uri.parse(BASE_URL).buildUpon().build();
+
+                final String BASE_URL = "http://api.themoviedb.org/3/discover/movie";
+                final String API_KEY_PARAM = "api_key";
+                final String SORT_BY_PARAM = "sort_by";
+
+                Uri buildUri = Uri.parse(BASE_URL).buildUpon()
+                        .appendQueryParameter(API_KEY_PARAM, API_KEY)
+                        .appendQueryParameter(SORT_BY_PARAM,sortBy)
+                        .build();
+
                 URL url = new URL(buildUri.toString());
 
                 urlConnection = (HttpURLConnection) url.openConnection();
                 urlConnection.setRequestMethod("GET");
                 urlConnection.connect();
-
 
                 InputStream inputStream = urlConnection.getInputStream();
                 StringBuffer buffer = new StringBuffer();

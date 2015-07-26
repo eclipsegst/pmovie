@@ -6,26 +6,20 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
-import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.google.android.youtube.player.YouTubeInitializationResult;
 import com.google.android.youtube.player.YouTubePlayer;
-import com.google.android.youtube.player.YouTubePlayerFragment;
 import com.google.android.youtube.player.YouTubePlayerSupportFragment;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.w3c.dom.Text;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -33,7 +27,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -42,8 +35,9 @@ import java.util.Map;
  */
 public class DetailActivityFragment extends Fragment {
 
+    private String API_KEY;
     private YouTubePlayer YPlayer;
-    private static final String YoutubeDeveloperKey = "AIzaSyAza88zKVDmsCv3b2_coAq0YTsMvFeeN_s";
+    private String YoutubeDeveloperKey;
     private static final int RECOVERY_DIALOG_REQUEST = 1;
 
     private final static String OWN_ADULT = "adult";
@@ -94,8 +88,13 @@ public class DetailActivityFragment extends Fragment {
         Intent intent = getActivity().getIntent();
         mMovie = (Movie)intent.getSerializableExtra("MOVIE");
 
+        API_KEY = ((Constants) this.getActivity().getApplication()).API_KEY;
+        YoutubeDeveloperKey = ((Constants) this.getActivity().getApplication()).YOUTUBE_KEY;
+
         FetchMovieTask fetchMovieTask = new FetchMovieTask();
         fetchMovieTask.execute();
+
+
 
     }
 
@@ -198,10 +197,22 @@ public class DetailActivityFragment extends Fragment {
             BufferedReader reader = null;
 
             String movieJsonStr = null;
+
+            String appendToResponse = "releases,trailers";
             try {
-                final String BASE_URL = "https://api.themoviedb.org/3/movie/" + mMovie.id +"?api_key=&append_to_response=releases,trailers";
-                Uri buildUri = Uri.parse(BASE_URL).buildUpon().build();
+
+                final String BASE_URL = "https://api.themoviedb.org/3/movie/";
+                final String API_KEY_PARAM = "api_key";
+                final String APPEND_TO_RESPONSE = "append_to_response";
+
+                Uri buildUri = Uri.parse(BASE_URL).buildUpon()
+                        .appendPath(String.valueOf(mMovie.id))
+                        .appendQueryParameter(API_KEY_PARAM, API_KEY)
+                        .appendQueryParameter(APPEND_TO_RESPONSE, appendToResponse).build();
+
                 URL url = new URL(buildUri.toString());
+
+                Log.d(LOG_TAG, "url = " + url);
 
                 urlConnection = (HttpURLConnection) url.openConnection();
                 urlConnection.setRequestMethod("GET");
